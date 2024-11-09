@@ -1,65 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fund NAV Chart</title>
-  <!-- Include Highcharts from the CDN -->
-  <script src="https://code.highcharts.com/highcharts.js"></script>
-  <script src="https://code.highcharts.com/modules/stock.js"></script>
-</head>
-<body>
-  <!-- Container for the chart -->
-  <div id="navChartContainer" style="width:100%; height:400px;"></div>
+document.addEventListener('DOMContentLoaded', function () {
+  // URL to fetch CSV data from GitHub
+  const csvUrl = 'https://raw.githubusercontent.com/mcleancapital/website/refs/heads/main/Diamond_Chart.csv';
 
-  <!-- JavaScript for the chart -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
+  // Fetch data from GitHub CSV
+  fetch(csvUrl)
+    .then(response => response.text())
+    .then(data => {
+      // Parse the CSV data
+      const parsedData = parseCSV(data);
+
+      // Set up the chart with the parsed data
       Highcharts.stockChart('navChartContainer', {
-        rangeSelector: {
-          selected: 1
-        },
-        title: {
-          text: 'Fund NAV Historical Performance'
-        },
+        rangeSelector: { selected: 1 },
+        title: { text: 'Fund NAV Historical Performance' },
         series: [{
           name: 'NAV',
-          data: [
-            [Date.UTC(2024, 8, 31), 10],
-            [Date.UTC(2024, 9, 3), 9.94],
-            [Date.UTC(2024, 9, 4), 9.92],
-            [Date.UTC(2024, 9, 5), 9.86],
-            [Date.UTC(2024, 9, 6), 9.78],
-            [Date.UTC(2024, 9, 9), 9.90],
-            [Date.UTC(2024, 9, 10), 9.99],
-            [Date.UTC(2024, 9, 11), 10.05],
-            [Date.UTC(2024, 9, 12), 10.09],
-            [Date.UTC(2024, 9, 13), 10.15],
-            [Date.UTC(2024, 9, 16), 10.20],
-            [Date.UTC(2024, 9, 17), 10.17],
-            [Date.UTC(2024, 1, 19), 10.26],
-            [Date.UTC(2024, 9, 23), 10.21],
-            [Date.UTC(2024, 9, 24), 10.19],
-            [Date.UTC(2024, 9, 25), 10.18],
-            [Date.UTC(2024, 9, 27), 10.34],
-            [Date.UTC(2024, 9, 30), 10.35],
-            [Date.UTC(2024, 10, 2), 10.25]
-          ],
-          tooltip: {
-            valueDecimals: 2
-          }
+          data: parsedData,
+          tooltip: { valueDecimals: 2 }
         }],
-        tooltip: {
-          split: true
-        },
-        navigator: {
-          enabled: true
-        },
-        scrollbar: {
-          enabled: true
-        }
+        tooltip: { split: true },
+        navigator: { enabled: true },
+        scrollbar: { enabled: true }
       });
+    })
+    .catch(error => console.error('Error fetching data:', error));
+
+  // Function to parse CSV data into Highcharts format
+  function parseCSV(data) {
+    const rows = data.split('\n').slice(1); // Remove header row
+    return rows.map(row => {
+      const [dateStr, value] = row.split(',');
+      const date = new Date(dateStr);
+      return [Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()), parseFloat(value)];
     });
-  </script>
-</body>
-</html>
+  }
+});
