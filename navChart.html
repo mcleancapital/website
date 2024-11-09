@@ -1,36 +1,42 @@
-document.addEventListener('DOMContentLoaded', function () {
-  const csvUrl = 'https://raw.githubusercontent.com/mcleancapital/website/main/Diamond_Chart.csv';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund NAV Chart</title>
+  <!-- Load Highcharts -->
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+</head>
+<body>
+  <!-- Container for the chart -->
+  <div id="navChartContainer" style="width: 100%; height: 400px;"></div>
 
-  fetch(csvUrl)
-    .then(response => response.text())
-    .then(data => {
-      const parsedData = parseCSV(data);
+  <!-- JavaScript to create the chart -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Static test data for the chart
+      const testData = [
+        [Date.UTC(2024, 7, 31), 10.00],
+        [Date.UTC(2024, 8, 3), 9.94],
+        [Date.UTC(2024, 8, 4), 9.92],
+        [Date.UTC(2024, 8, 5), 9.86],
+        [Date.UTC(2024, 8, 6), 9.78]
+      ];
 
+      // Create the Highcharts chart
       Highcharts.stockChart('navChartContainer', {
         rangeSelector: { selected: 1 },
         title: { text: 'Fund NAV Historical Performance' },
         series: [{
           name: 'NAV',
-          data: parsedData,
+          data: testData,
           tooltip: { valueDecimals: 2 }
         }],
         tooltip: { split: true },
         navigator: { enabled: true },
         scrollbar: { enabled: true }
       });
-    })
-    .catch(error => console.error('Error fetching data:', error));
-
-  function parseCSV(data) {
-    const rows = data.split('\n').slice(1); // Remove header row
-    return rows.map(row => {
-      const [dateStr, value] = row.split(',');
-      const date = new Date(dateStr.trim());
-      const numericValue = parseFloat(value.trim());
-
-      if (!isNaN(numericValue)) {
-        return [Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()), numericValue];
-      }
-    }).filter(Boolean);
-  }
-});
+    });
+  </script>
+</body>
+</html>
