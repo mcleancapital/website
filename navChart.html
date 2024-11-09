@@ -11,43 +11,59 @@
   <!-- Container for the chart -->
   <div id="navChartContainer" style="width: 100%; height: 400px;"></div>
 
-  <!-- JavaScript to fetch CSV data and create the chart -->
+  <!-- JavaScript to create the chart -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      const csvUrl = 'https://raw.githubusercontent.com/mcleancapital/website/main/Diamond_Chart.csv';
+      // Static data for the chart
+      const navData = [
+        [Date.UTC(2024, 8, 31), 10.00],
+        [Date.UTC(2024, 9, 3), 9.94],
+        [Date.UTC(2024, 9, 4), 9.92],
+        [Date.UTC(2024, 9, 5), 9.86],
+        [Date.UTC(2024, 9, 6), 9.78],
+        [Date.UTC(2024, 9, 9), 9.90],
+        [Date.UTC(2024, 9, 10), 9.99],
+        [Date.UTC(2024, 9, 11), 10.05],
+        [Date.UTC(2024, 9, 12), 10.09],
+        [Date.UTC(2024, 9, 13), 10.15],
+        [Date.UTC(2024, 9, 16), 10.20],
+        [Date.UTC(2024, 9, 17), 10.17],
+        [Date.UTC(2024, 9, 19), 10.26],
+        [Date.UTC(2024, 9, 23), 10.21],
+        [Date.UTC(2024, 9, 24), 10.19],
+        [Date.UTC(2024, 9, 25), 10.18],
+        [Date.UTC(2024, 9, 27), 10.34],
+        [Date.UTC(2024, 9, 30), 10.35],
+        [Date.UTC(2024, 10, 2), 10.25],
+        [Date.UTC(2024, 10, 7), 10.24],
+        [Date.UTC(2024, 10, 10), 10.49],
+        [Date.UTC(2024, 10, 14), 10.73],
+        [Date.UTC(2024, 10, 15), 10.60],
+        [Date.UTC(2024, 10, 17), 10.57],
+        [Date.UTC(2024, 10, 21), 10.58],
+        [Date.UTC(2024, 10, 25), 10.46],
+        [Date.UTC(2024, 10, 28), 10.48],
+        [Date.UTC(2024, 10, 30), 10.46],
+        [Date.UTC(2024, 10, 31), 10.36],
+        [Date.UTC(2024, 11, 1), 10.50],
+        [Date.UTC(2024, 11, 4), 10.51],
+        [Date.UTC(2024, 11, 7), 10.85],
+        [Date.UTC(2024, 11, 8), 10.90]
+      ];
 
-      fetch(csvUrl)
-        .then(response => response.text())
-        .then(data => {
-          const parsedData = parseCSV(data);
-
-          Highcharts.stockChart('navChartContainer', {
-            rangeSelector: { selected: 1 },
-            title: { text: 'Fund NAV Historical Performance' },
-            series: [{
-              name: 'NAV',
-              data: parsedData,
-              tooltip: { valueDecimals: 2 }
-            }],
-            tooltip: { split: true },
-            navigator: { enabled: true },
-            scrollbar: { enabled: true }
-          });
-        })
-        .catch(error => console.error('Error fetching data:', error));
-
-      function parseCSV(data) {
-        const rows = data.split('\n').slice(1); // Remove header row
-        return rows.map(row => {
-          const [dateStr, value] = row.split(',');
-          const date = new Date(dateStr.trim());
-          const numericValue = parseFloat(value.trim());
-
-          if (!isNaN(numericValue)) {
-            return [Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()), numericValue];
-          }
-        }).filter(Boolean);
-      }
+      // Create the Highcharts chart
+      Highcharts.stockChart('navChartContainer', {
+        rangeSelector: { selected: 1 },
+        title: { text: 'Fund NAV Historical Performance' },
+        series: [{
+          name: 'NAV',
+          data: navData,
+          tooltip: { valueDecimals: 2 }
+        }],
+        tooltip: { split: true },
+        navigator: { enabled: true },
+        scrollbar: { enabled: true }
+      });
     });
   </script>
 </body>
