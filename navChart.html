@@ -1,55 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fund NAV Chart</title>
-  <!-- Include Highcharts from the CDN -->
-  <script src="https://code.highcharts.com/stock/highstock.js"></script>
-</head>
-<body>
-  <!-- Container for the chart -->
-  <div id="navChartContainer" style="width: 100%; height: 400px;"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const csvUrl = 'https://raw.githubusercontent.com/mcleancapital/website/refs/heads/main/Diamond_Chart.csv';
 
-  <!-- JavaScript for the chart -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // URL to fetch CSV data from GitHub
-      const csvUrl = 'https://raw.githubusercontent.com/mcleancapital/website/refs/heads/main/Diamond_Chart.csv';
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(data => {
+        const parsedData = parseCSV(data);
 
-      // Fetch data from GitHub CSV
-      fetch(csvUrl)
-        .then(response => response.text())
-        .then(data => {
-          // Parse the CSV data
-          const parsedData = parseCSV(data);
-
-          // Set up the chart with the parsed data
-          Highcharts.stockChart('navChartContainer', {
-            rangeSelector: { selected: 1 },
-            title: { text: 'Fund NAV Historical Performance' },
-            series: [{
-              name: 'NAV',
-              data: parsedData,
-              tooltip: { valueDecimals: 2 }
-            }],
-            tooltip: { split: true },
-            navigator: { enabled: true },
-            scrollbar: { enabled: true }
-          });
-        })
-        .catch(error => console.error('Error fetching data:', error));
-
-      // Function to parse CSV data into Highcharts format
-      function parseCSV(data) {
-        const rows = data.split('\n').slice(1); // Remove header row
-        return rows.map(row => {
-          const [dateStr, value] = row.split(',');
-          const date = new Date(dateStr);
-          return [Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()), parseFloat(value)];
+        Highcharts.stockChart('navChartContainer', {
+          rangeSelector: { selected: 1 },
+          title: { text: 'Fund NAV Historical Performance' },
+          series: [{
+            name: 'NAV',
+            data: parsedData,
+            tooltip: { valueDecimals: 2 }
+          }],
+          tooltip: { split: true },
+          navigator: { enabled: true },
+          scrollbar: { enabled: true }
         });
-      }
-    });
-  </script>
-</body>
-</html>
+      })
+      .catch(error => console.error('Error fetching data:', error));
+
+    function parseCSV(data) {
+      const rows = data.split('\n').slice(1); // Remove header row
+      return rows.map(row => {
+        const [dateStr, value] = row.split(',');
+        if (dateStr && value) {
+          // Split the date into components and convert to numbers
+          const [year, month, day] = dateStr.trim().split('-').map(Number);
+
+          // Create a UTC date
+          const utcDate = Date.UTC(year, month - 1, day); // Month is zero-indexed
+
+          const numericValue = parseFloat(value.trim());
+
+          // Only add valid data points
+          if (!isNaN(utcDate) && !isNaN(numericValue)) {
+            return [utcDate, numericValue];
+          }
+        }
+      }).filter(Boolean); // Filter out any undefined entries
+    }
+  });
+</script>
