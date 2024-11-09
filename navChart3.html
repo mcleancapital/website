@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund NAV Chart</title>
+  <!-- Load Highcharts -->
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+</head>
+<body>
+  <!-- Container for the chart -->
+  <div id="navChartContainer" style="width: 100%; height: 400px;"></div>
+
+  <!-- JavaScript to create the chart -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Static data for the chart
+      const navData = [
+        [Date.UTC(2024, 7, 31), 10.00],
+        [Date.UTC(2024, 8, 3), 9.94],
+        [Date.UTC(2024, 8, 4), 9.92],
+        [Date.UTC(2024, 8, 5), 9.86],
+        [Date.UTC(2024, 8, 6), 9.78],
+        [Date.UTC(2024, 8, 9), 9.90],
+        [Date.UTC(2024, 8, 10), 9.99],
+        [Date.UTC(2024, 8, 11), 10.05],
+        [Date.UTC(2024, 8, 12), 10.09],
+        [Date.UTC(2024, 8, 13), 10.15],
+        [Date.UTC(2024, 8, 16), 10.20],
+        [Date.UTC(2024, 8, 17), 10.17],
+        [Date.UTC(2024, 8, 19), 10.26],
+        [Date.UTC(2024, 8, 23), 10.21],
+        [Date.UTC(2024, 8, 24), 10.19],
+        [Date.UTC(2024, 8, 25), 10.18],
+        [Date.UTC(2024, 8, 27), 10.34],
+        [Date.UTC(2024, 8, 30), 10.35],
+        [Date.UTC(2024, 9, 2), 10.25],
+        [Date.UTC(2024, 9, 7), 10.24],
+        [Date.UTC(2024, 9, 10), 10.49],
+        [Date.UTC(2024, 9, 14), 10.73],
+        [Date.UTC(2024, 9, 15), 10.60],
+        [Date.UTC(2024, 9, 17), 10.57],
+        [Date.UTC(2024, 9, 21), 10.58],
+        [Date.UTC(2024, 9, 25), 10.46],
+        [Date.UTC(2024, 9, 28), 10.48],
+        [Date.UTC(2024, 9, 30), 10.46],
+        [Date.UTC(2024, 9, 31), 10.36],
+        [Date.UTC(2024, 10, 1), 10.50],
+        [Date.UTC(2024, 10, 4), 10.51],
+        [Date.UTC(2024, 10, 7), 10.85],
+        [Date.UTC(2024, 10, 10), 10.90]
+      ];
+
+      // Calculate percentage changes
+      const navDataWithChange = navData.map((point, index) => {
+        if (index === 0) return [...point, 0]; // No change for the first point
+        const [date, nav] = point;
+        const previousNav = navData[index - 1][1];
+        const percentChange = ((nav - previousNav) / previousNav) * 100;
+        return [date, nav, percentChange];
+      });
+
+      // Create the Highcharts chart
+      Highcharts.stockChart('navChartContainer', {
+        rangeSelector: { selected: 1 },
+        title: { text: 'Fund NAV Historical Performance' },
+        series: [{
+          name: 'NAV',
+          data: navDataWithChange,
+          tooltip: {
+            valueDecimals: 2,
+            pointFormatter: function() {
+              return `NAV: <b>${this.y.toFixed(2)}</b><br/>` +
+                     `Change: <b>${this.change.toFixed(2)}%</b>`;
+            }
+          }
+        }],
+        tooltip: { split: true },
+        navigator: { enabled: true },
+        scrollbar: { enabled: true }
+      });
+    });
+  </script>
+</body>
+</html>
