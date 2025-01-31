@@ -107,39 +107,64 @@
         [Date.UTC(2025, 0, 30), 11.31]
       ];
 
-      // Set the YTD start value as the NAV from the first data point
-      const ytdStartNav = 10.92;
+function getStartNav(startDate) {
+        for (let i = 0; i < navData.length; i++) {
+          if (navData[i][0] >= startDate) {
+            return navData[i][1];
+          }
+        }
+        return navData[0][1];
+      }
 
-      // Calculate YTD change only
-      const navDataWithYTDChange = navData.map(point => {
-        const [date, nav] = point;
-        const ytdChange = ((nav - ytdStartNav) / ytdStartNav) * 100;
-        return { x: date, y: nav, ytdChange };
-      });
+      function updateChart(range) {
+        const now = new Date();
+        let startDate;
 
-      // Create the Highcharts chart
-      Highcharts.stockChart('navChartContainer', {
-        rangeSelector: { selected: 1 },
+        switch (range) {
+          case '1m': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
+          case '3m': startDate = new Date(now.setMonth(now.getMonth() - 3)); break;
+          case '6m': startDate = new Date(now.setMonth(now.getMonth() - 6)); break;
+          case '1yr': startDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
+          case 'ytd': startDate = new Date(now.getFullYear(), 0, 1); break;
+          case 'all': startDate = new Date(navData[0][0]); break;
+        }
+
+        const startNav = getStartNav(startDate.getTime());
+        const updatedData = navData.map(point => {
+          return { x: point[0], y: point[1], change: ((point[1] - startNav) / startNav) * 100 };
+        });
+
+        chart.series[0].setData(updatedData);
+      }
+
+      const chart = Highcharts.stockChart('navChartContainer', {
+        rangeSelector: {
+          buttons: [
+            { type: 'month', count: 1, text: '1m', events: { click: () => updateChart('1m') } },
+            { type: 'month', count: 3, text: '3m', events: { click: () => updateChart('3m') } },
+            { type: 'month', count: 6, text: '6m', events: { click: () => updateChart('6m') } },
+            { type: 'year', count: 1, text: '1yr', events: { click: () => updateChart('1yr') } },
+            { type: 'ytd', text: 'YTD', events: { click: () => updateChart('ytd') } },
+            { type: 'all', text: 'ALL', events: { click: () => updateChart('all') } }
+          ],
+          selected: 1
+        },
         title: { text: 'Fund NAV Historical Performance' },
         series: [{
           name: 'NAV',
-          data: navDataWithYTDChange,
+          data: navData.map(point => ({ x: point[0], y: point[1], change: 0 })),
           tooltip: {
             pointFormatter: function() {
               return `<span style="color:${this.series.color}">●</span> ` +
                      `NAV: <b>${this.y.toFixed(2)}</b><br/>` +
-                     `YTD Change: <b>${this.ytdChange.toFixed(2)}%</b>`;
+                     `Change: <b>${this.change.toFixed(2)}%</b>`;
             },
             valueDecimals: 2
           }
-        }],
-        tooltip: {
-          split: true,
-          shared: true
-        },
-        navigator: { enabled: true },
-        scrollbar: { enabled: true }
+        }]
       });
+
+      updateChart('ytd');
     });
   </script>
 </body>
