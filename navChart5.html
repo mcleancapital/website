@@ -107,7 +107,7 @@
         [Date.UTC(2025, 0, 30), 11.31]
       ];
 
-function getStartNav(startDate) {
+      function getStartNav(startDate) {
         for (let i = 0; i < navData.length; i++) {
           if (navData[i][0] >= startDate) {
             return navData[i][1];
@@ -116,20 +116,8 @@ function getStartNav(startDate) {
         return navData[0][1];
       }
 
-      function updateChart(range) {
-        const now = new Date();
-        let startDate;
-
-        switch (range) {
-          case '1m': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
-          case '3m': startDate = new Date(now.setMonth(now.getMonth() - 3)); break;
-          case '6m': startDate = new Date(now.setMonth(now.getMonth() - 6)); break;
-          case '1yr': startDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
-          case 'ytd': startDate = new Date(now.getFullYear(), 0, 1); break;
-          case 'all': startDate = new Date(navData[0][0]); break;
-        }
-
-        const startNav = getStartNav(startDate.getTime());
+      function updateChart(startDate) {
+        const startNav = getStartNav(startDate);
         const updatedData = navData.map(point => {
           return { x: point[0], y: point[1], change: ((point[1] - startNav) / startNav) * 100 };
         });
@@ -140,12 +128,12 @@ function getStartNav(startDate) {
       const chart = Highcharts.stockChart('navChartContainer', {
         rangeSelector: {
           buttons: [
-            { type: 'month', count: 1, text: '1m', events: { click: () => updateChart('1m') } },
-            { type: 'month', count: 3, text: '3m', events: { click: () => updateChart('3m') } },
-            { type: 'month', count: 6, text: '6m', events: { click: () => updateChart('6m') } },
-            { type: 'year', count: 1, text: '1yr', events: { click: () => updateChart('1yr') } },
-            { type: 'ytd', text: 'YTD', events: { click: () => updateChart('ytd') } },
-            { type: 'all', text: 'ALL', events: { click: () => updateChart('all') } }
+            { type: 'month', count: 1, text: '1m', events: { click: () => updateChart(new Date().setMonth(new Date().getMonth() - 1)) } },
+            { type: 'month', count: 3, text: '3m', events: { click: () => updateChart(new Date().setMonth(new Date().getMonth() - 3)) } },
+            { type: 'month', count: 6, text: '6m', events: { click: () => updateChart(new Date().setMonth(new Date().getMonth() - 6)) } },
+            { type: 'year', count: 1, text: '1yr', events: { click: () => updateChart(new Date().setFullYear(new Date().getFullYear() - 1)) } },
+            { type: 'ytd', text: 'YTD', events: { click: () => updateChart(new Date(new Date().getFullYear(), 0, 1)) } },
+            { type: 'all', text: 'ALL', events: { click: () => updateChart(navData[0][0]) } }
           ],
           selected: 1
         },
@@ -161,10 +149,19 @@ function getStartNav(startDate) {
             },
             valueDecimals: 2
           }
-        }]
+        }],
+        xAxis: {
+          events: {
+            afterSetExtremes: function (e) {
+              if (e.min) {
+                updateChart(e.min);
+              }
+            }
+          }
+        }
       });
 
-      updateChart('ytd');
+      updateChart(new Date(new Date().getFullYear(), 0, 1));
     });
   </script>
 </body>
