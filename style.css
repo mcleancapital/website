@@ -1,4 +1,89 @@
 /* styles.css */
+.topbar {
+  background: white;
+  padding: 0.75em 1em;
+  border-bottom: 1px solid #ccc;
+  font-family: Arial, sans-serif;
+}
+
+.topbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 50px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-weight: bold;
+  line-height: 1.2;
+  font-size: 16px;
+  color: #000;
+}
+
+.nav-links a {
+  margin: 0 1em;
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+}
+
+.nav-links a.active {
+  color: #007bff;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+}
+
+.lang-switch {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.lang {
+  cursor: pointer;
+}
+
+.lang.active {
+  background: #eee;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.bell {
+  color: #006eff;
+  font-size: 18px;
+}
+
+.username {
+  font-size: 14px;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.dropdown {
+  font-size: 12px;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
