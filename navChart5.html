@@ -30,26 +30,6 @@
         console.log("sp500EqualWeightCadData length:", sp500EqualWeightCadData.length);
       }
 
-      // --- SEND LATEST NAV TO WIX PARENT PAGE ---
-      function sendLatestNavToParent() {
-        try {
-          const lastPoint = navData[navData.length - 1];
-          const lastValue = lastPoint[1];
-
-          // Send to parent (Wix page)
-          window.parent.postMessage(
-            {
-              type: "MCI2_NAV_UPDATE",
-              nav: lastValue
-            },
-            "*"
-          );
-          console.log("Sent latest NAV to parent:", lastValue);
-        } catch (e) {
-          console.error("Error sending NAV to parent:", e);
-        }
-      }
-
       // Helper: get starting value for a given data series
       function getStartValue(seriesArray, startDate) {
         for (let i = 0; i < seriesArray.length; i++) {
@@ -59,6 +39,52 @@
         }
         // Fallback: first value in the series
         return seriesArray[0][1];
+      }
+
+      // --- COMPUTE LATEST NAV, DATE & YTD RETURN ---
+      function computeLatestMetrics() {
+        const lastPoint = navData[navData.length - 1];
+        const lastTimestamp = lastPoint[0];    // ms since epoch
+        const lastNav = lastPoint[1];
+
+        // YTD start date (Jan 1 of current year)
+        const now = new Date();
+        const ytdStartDate = new Date(now.getFullYear(), 0, 1).getTime();
+        const startNavYtd = getStartValue(navData, ytdStartDate);
+
+        const ytdReturn = ((lastNav - startNavYtd) / startNavYtd) * 100;
+
+        const lastDateObj = new Date(lastTimestamp);
+        const lastDateStr = lastDateObj.toISOString().slice(0, 10); // YYYY-MM-DD
+
+        return {
+          lastNav,
+          lastTimestamp,
+          lastDateStr,
+          ytdReturn
+        };
+      }
+
+      // --- SEND LATEST NAV / DATE / YTD RETURN TO WIX PARENT PAGE ---
+      function sendLatestNavToParent() {
+        try {
+          const metrics = computeLatestMetrics();
+
+          // Send to parent (Wix page)
+          window.parent.postMessage(
+            {
+              type: "MCI2_NAV_UPDATE",
+              nav: metrics.lastNav,           // numeric NAV
+              date: metrics.lastDateStr,      // "YYYY-MM-DD"
+              timestamp: metrics.lastTimestamp,
+              ytdReturn: metrics.ytdReturn    // numeric %, e.g. 12.34
+            },
+            "*"
+          );
+          console.log("Sent latest NAV/YTD to parent:", metrics);
+        } catch (e) {
+          console.error("Error sending NAV to parent:", e);
+        }
       }
 
       function updateChart(startDate) {
@@ -198,7 +224,7 @@
       // Initial: YTD baseline for both series
       updateChart(new Date(new Date().getFullYear(), 0, 1));
 
-      // Send latest NAV to Wix once everything is ready
+      // Send latest NAV / date / YTD to Wix once everything is ready
       sendLatestNavToParent();
     });
   </script>
