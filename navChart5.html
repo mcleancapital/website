@@ -18,9 +18,36 @@
   <!-- JavaScript to create the chart -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      // Basic checks
       if (typeof navData === 'undefined' || !navData.length) {
         console.error("navData is not loaded. Check mci2_nav_data.js.");
         return;
+      }
+
+      if (typeof sp500EqualWeightCadData === 'undefined' || !sp500EqualWeightCadData.length) {
+        console.warn("sp500EqualWeightCadData is not loaded or empty. Second series will not show.");
+      } else {
+        console.log("sp500EqualWeightCadData length:", sp500EqualWeightCadData.length);
+      }
+
+      // --- SEND LATEST NAV TO WIX PARENT PAGE ---
+      function sendLatestNavToParent() {
+        try {
+          const lastPoint = navData[navData.length - 1];
+          const lastValue = lastPoint[1];
+
+          // Send to parent (Wix page)
+          window.parent.postMessage(
+            {
+              type: "MCI2_NAV_UPDATE",
+              nav: lastValue
+            },
+            "*"
+          );
+          console.log("Sent latest NAV to parent:", lastValue);
+        } catch (e) {
+          console.error("Error sending NAV to parent:", e);
+        }
       }
 
       // Helper: get starting value for a given data series
@@ -61,6 +88,7 @@
           }));
         }
 
+        // Update both series
         chart.series[0].setData(updatedNavData, false); // MCI2
         if (chart.series[1]) {
           chart.series[1].setData(updatedSpData, false); // S&P EW
@@ -127,6 +155,7 @@
         series: [
           {
             name: 'MCI2 NAV',
+            type: 'line',
             data: navData.map(point => ({ x: point[0], y: point[1], change: 0 })),
             tooltip: {
               pointFormatter: function() {
@@ -135,10 +164,12 @@
                        `Change: <b>${this.change.toFixed(2)}%</b>`;
               },
               valueDecimals: 2
-            }
+            },
+            visible: true
           },
           {
             name: 'S&P 500 Equal Weight (CAD)',
+            type: 'line',
             data: (typeof sp500EqualWeightCadData !== 'undefined' && sp500EqualWeightCadData.length
               ? sp500EqualWeightCadData.map(point => ({ x: point[0], y: point[1], change: 0 }))
               : []),
@@ -149,7 +180,8 @@
                        `Change: <b>${this.change.toFixed(2)}%</b>`;
               },
               valueDecimals: 2
-            }
+            },
+            visible: true
           }
         ],
         xAxis: {
@@ -165,6 +197,9 @@
 
       // Initial: YTD baseline for both series
       updateChart(new Date(new Date().getFullYear(), 0, 1));
+
+      // Send latest NAV to Wix once everything is ready
+      sendLatestNavToParent();
     });
   </script>
 </body>
