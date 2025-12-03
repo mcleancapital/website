@@ -8,6 +8,7 @@
   <script src="https://code.highcharts.com/stock/highstock.js"></script>
 
   <!-- Load data generated from __MCI2.xlsx -->
+  <!-- This file must define: navData and sp500EqualWeightCadData -->
   <script src="mci2_nav_data.js"></script>
 </head>
 <body>
@@ -22,24 +23,49 @@
         return;
       }
 
-      function getStartNav(startDate) {
-        for (let i = 0; i < navData.length; i++) {
-          if (navData[i][0] >= startDate) {
-            return navData[i][1];
+      // Helper: get starting value for a given data series
+      function getStartValue(seriesArray, startDate) {
+        for (let i = 0; i < seriesArray.length; i++) {
+          if (seriesArray[i][0] >= startDate) {
+            return seriesArray[i][1];
           }
         }
-        return navData[0][1];
+        // Fallback: first value in the series
+        return seriesArray[0][1];
       }
 
       function updateChart(startDate) {
-        const startNav = getStartNav(startDate);
-        const updatedData = navData.map(point => ({
+        // MCI2 NAV start
+        const startNav = getStartValue(navData, startDate);
+
+        // S&P 500 Equal Weight start (if available)
+        let startSp = null;
+        if (typeof sp500EqualWeightCadData !== 'undefined' && sp500EqualWeightCadData.length) {
+          startSp = getStartValue(sp500EqualWeightCadData, startDate);
+        }
+
+        // Rebuild MCI2 series with % change
+        const updatedNavData = navData.map(point => ({
           x: point[0],
           y: point[1],
           change: ((point[1] - startNav) / startNav) * 100
         }));
 
-        chart.series[0].setData(updatedData);
+        // Rebuild S&P EW series with % change (if present)
+        let updatedSpData = [];
+        if (startSp !== null) {
+          updatedSpData = sp500EqualWeightCadData.map(point => ({
+            x: point[0],
+            y: point[1],
+            change: ((point[1] - startSp) / startSp) * 100
+          }));
+        }
+
+        chart.series[0].setData(updatedNavData, false); // MCI2
+        if (chart.series[1]) {
+          chart.series[1].setData(updatedSpData, false); // S&P EW
+        }
+        chart.redraw();
       }
 
       const chart = Highcharts.stockChart('navChartContainer', {
@@ -94,19 +120,38 @@
           ],
           selected: 1
         },
-        title: { text: 'Fund NAV Historical Performance' },
-        series: [{
-          name: 'NAV',
-          data: navData.map(point => ({ x: point[0], y: point[1], change: 0 })),
-          tooltip: {
-            pointFormatter: function() {
-              return `<span style="color:${this.series.color}">●</span> ` +
-                     `NAV: <b>${this.y.toFixed(2)}</b><br/>` +
-                     `Change: <b>${this.change.toFixed(2)}%</b>`;
-            },
-            valueDecimals: 2
+        title: { text: 'Fund NAV Historical Performance vs S&P 500 Equal Weight (CAD)' },
+        legend: {
+          enabled: true
+        },
+        series: [
+          {
+            name: 'MCI2 NAV',
+            data: navData.map(point => ({ x: point[0], y: point[1], change: 0 })),
+            tooltip: {
+              pointFormatter: function() {
+                return `<span style="color:${this.series.color}">●</span> ` +
+                       `MCI2 NAV: <b>${this.y.toFixed(2)}</b><br/>` +
+                       `Change: <b>${this.change.toFixed(2)}%</b>`;
+              },
+              valueDecimals: 2
+            }
+          },
+          {
+            name: 'S&P 500 Equal Weight (CAD)',
+            data: (typeof sp500EqualWeightCadData !== 'undefined' && sp500EqualWeightCadData.length
+              ? sp500EqualWeightCadData.map(point => ({ x: point[0], y: point[1], change: 0 }))
+              : []),
+            tooltip: {
+              pointFormatter: function() {
+                return `<span style="color:${this.series.color}">●</span> ` +
+                       `S&P 500 EW (CAD): <b>${this.y.toFixed(2)}</b><br/>` +
+                       `Change: <b>${this.change.toFixed(2)}%</b>`;
+              },
+              valueDecimals: 2
+            }
           }
-        }],
+        ],
         xAxis: {
           events: {
             afterSetExtremes: function (e) {
@@ -118,7 +163,7 @@
         }
       });
 
-      // Initial: YTD
+      // Initial: YTD baseline for both series
       updateChart(new Date(new Date().getFullYear(), 0, 1));
     });
   </script>
